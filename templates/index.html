@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ShadowTrap | Cyber Intelligence</title>
+    <title>ShadowTrap | Forensic Analysis</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -15,8 +15,8 @@
         <section class="panel home-panel">
             <div class="hero-box">
                 <h1 class="glitch-title">SHADOWTRAP</h1>
-                <p class="tagline">DISCORD-NOTIFIED INTEL SYSTEM</p>
-                <div class="scroll-hint">SCROLL TO MONITOR INTRUSIONS</div>
+                <p class="tagline">FORENSIC REPLAY SYSTEM</p>
+                <div class="scroll-hint">SCROLL TO REPLAY ATTACKS</div>
             </div>
         </section>
 
@@ -26,36 +26,30 @@
                     <div class="stat-card hover-big">
                         <h2 id="totalAttacks">0</h2><p>TOTAL HITS</p>
                     </div>
-                    <div class="stat-card hover-big">
-                        <h2 id="uniqueIps">0</h2><p>SOURCE IPS</p>
-                    </div>
                 </div>
                 
                 <div class="logs-window hover-big">
-                    <h3 class="window-title">🚨 REAL-TIME RISK ANALYSIS FEED</h3>
+                    <h3 class="window-title">🚨 RISK FEED (CLICK ROW TO REPLAY)</h3>
                     <div class="table-scroll">
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>TIME</th><th>IP</th><th>LOCATION</th><th>USER:PASS</th><th>LEVEL</th><th>SCORE</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>TIME</th><th>IP</th><th>LOCATION</th><th>USER:PASS</th><th>LEVEL</th><th>ACTION</th></tr></thead>
                             <tbody id="logsBody"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </section>
+    </div>
 
-        <section class="panel info-panel">
-            <div class="info-container">
-                <div class="info-big-card hover-big">
-                    <h2>AI SCORING & INSTANT WEBHOOKS</h2>
-                    <p>This honeypot analyzes behavior in real-time. Critical threats trigger automated Discord notifications. Designed to monitor unauthorized access attempts with detailed origin intelligence.</p>
-                    <p style="margin-top:20px; color:var(--neon)">STATUS: PROTECTED BY DISCORD SENTINEL</p>
-                </div>
+    <div id="replayModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeReplay()">[ CLOSE ]</span>
+            <h2 style="color:var(--neon)">> FORENSIC_REPLAY_MODE</h2>
+            <div id="terminalBody" class="fake-terminal">
+                <span style="color:var(--low)">[SYSTEM]: Initializing session playback...</span><br>
+                <span id="replayText"></span><span class="cursor">_</span>
             </div>
-        </section>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
