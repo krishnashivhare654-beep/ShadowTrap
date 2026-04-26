@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🕸️ ShadowTrap - Live Attack Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="matrix-bg"></div>
+    
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <h1>🕸️ <span class="glitch" data-text="SHADOWTRAP">SHADOWTRAP</span></h1>
+            <p class="subtitle">Intelligent SSH HoneyPot | Live Attack Monitoring</p>
+            <div class="status">
+                <span class="pulse"></span>
+                <span>SYSTEM ACTIVE</span>
+                <span class="time" id="liveTime"></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Cards -->
+    <section class="stats-grid">
+        <div class="stat-card red">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-info">
+                <h3>Total Attacks</h3>
+                <p class="stat-number" id="totalAttacks">0</p>
+            </div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-icon">🌍</div>
+            <div class="stat-info">
+                <h3>Unique IPs</h3>
+                <p class="stat-number" id="uniqueIps">0</p>
+            </div>
+        </div>
+        <div class="stat-card yellow">
+            <div class="stat-icon">👤</div>
+            <div class="stat-info">
+                <h3>Usernames Tried</h3>
+                <p class="stat-number" id="uniqueUsernames">0</p>
+            </div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-icon">🔑</div>
+            <div class="stat-info">
+                <h3>Passwords Tried</h3>
+                <p class="stat-number" id="uniquePasswords">0</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Charts Section -->
+    <section class="charts-section">
+        <div class="chart-container">
+            <h2>📊 Top Usernames Targeted</h2>
+            <canvas id="usernameChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h2>🔐 Top Passwords Used</h2>
+            <canvas id="passwordChart"></canvas>
+        </div>
+    </section>
+
+    <!-- IP Section -->
+    <section class="ip-section">
+        <div class="ip-container">
+            <h2>🌐 Top Attacking IPs</h2>
+            <div class="ip-list" id="ipList">
+                <p class="empty">No attacks detected yet...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Attacks Table -->
+    <section class="attacks-section">
+        <h2>🚨 Recent Attack Logs</h2>
+        <div class="table-container">
+            <table id="attacksTable">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>IP Address</th>
+                        <th>Username</th>
+                        <th>Password</th>
+                        <th>Command</th>
+                    </tr>
+                </thead>
+                <tbody id="attacksBody">
+                    <tr>
+                        <td colspan="5" class="empty">⏳ Waiting for attacks... Try: ssh root@localhost -p 2222</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>🛡️ ShadowTrap v1.0 | Built by <strong>Krishna</strong> | Cybersecurity Research Tool</p>
+        <p class="warning">⚠️ For Educational Purposes Only</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
