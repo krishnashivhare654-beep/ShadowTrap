@@ -23,15 +23,15 @@
         <section class="panel monitor-panel">
             <div class="monitor-content">
                 <div class="stats-row">
-                    <div class="stat-card">
+                    <div class="stat-card hover-big">
                         <h2 id="totalAttacks">0</h2><p>TOTAL HITS</p>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card hover-big">
                         <h2 id="uniqueIps">0</h2><p>SOURCE IPS</p>
                     </div>
                 </div>
                 
-                <div class="logs-window">
+                <div class="logs-window hover-big">
                     <h3 class="window-title">🚨 REAL-TIME THREAT FEED</h3>
                     <div class="table-scroll">
                         <table>
@@ -44,16 +44,22 @@
         </section>
 
         <section class="panel info-panel">
-            <div class="info-grid">
-                <div class="info-card">
-                    <h2>ABOUT PROJECT</h2>
-                    <p>ShadowTrap captures hacker behavior in a 3D environment, logging keystrokes and tracking origins via IP geolocation.</p>
+            <div class="info-container">
+                <div class="info-big-card hover-big">
+                    <h2>MISSION: SHADOWTRAP</h2>
+                    <p>ShadowTrap is a high-interaction SSH honeypot. It creates a simulated environment to capture hacker behavior. Unlike simple logging, this system provides a 3D visualization platform to analyze threat patterns and origin geolocation in real-time.</p>
                 </div>
-                <div class="info-card">
-                    <h2>SYSTEM HELP</h2>
-                    <p>Test the trap:<br>
-                    <code style="color:#00f2fe">ssh root@localhost -p 2222</code><br>
-                    Track live results in the Monitor panel.</p>
+                <div class="info-grid">
+                    <div class="info-card hover-big">
+                        <h2>ABOUT PROJECT</h2>
+                        <p>Developed by Krishna Shivhare. Focuses on gathering intelligence on brute-force attempts and suspicious IP tracing.</p>
+                    </div>
+                    <div class="info-card hover-big">
+                        <h2>SYSTEM HELP</h2>
+                        <p>Test Command:<br>
+                        <code style="color:#00f2fe">ssh root@localhost -p 2222</code><br>
+                        Use any password to trigger the trap.</p>
+                    </div>
                 </div>
             </div>
         </section>
