@@ -1,50 +1,38 @@
 gsap.registerPlugin(ScrollTrigger);
 
-// 1. Mouse Tracking & Big Cursor
-const cursor = document.getElementById('cursor-visual');
+const glow = document.getElementById('cursor-glow');
 window.addEventListener('mousemove', (e) => {
-    gsap.to(cursor, { x: e.clientX - 20, y: e.clientY - 20, duration: 0.2 });
-    
-    // Create Water Ripple effect
-    if (Math.random() > 0.9) { // Har move par nahi, thode gaps pe
-        createRipple(e.clientX, e.clientY);
-    }
+    gsap.to(glow, { x: e.clientX - 15, y: e.clientY - 15, duration: 0.2 });
 });
 
-function createRipple(x, y) {
-    const ripple = document.createElement('div');
-    ripple.className = 'ripple';
-    ripple.style.left = x + 'px';
-    ripple.style.top = y + 'px';
-    document.body.appendChild(ripple);
-    setTimeout(() => { ripple.remove(); }, 1000);
-}
-
-// 2. 3D Scrolling Animations
+// Home Panel - Shrinks and disappears
 gsap.to(".home-panel", {
     scrollTrigger: { trigger: ".home-panel", start: "top top", scrub: 1 },
-    scale: 0.2, opacity: 0, rotateX: 45, z: -1000
+    scale: 0.5, opacity: 0, z: -1000
 });
 
+// Monitor Panel - Fades in from center
 gsap.from(".monitor-panel", {
-    scrollTrigger: { trigger: ".monitor-panel", start: "top bottom", end: "top center", scrub: 1 },
-    scale: 2, opacity: 0, rotateX: -45, z: 1000
+    scrollTrigger: { trigger: ".monitor-panel", start: "top bottom", end: "top top", scrub: 1 },
+    opacity: 0, scale: 0.8, y: 100
 });
 
-// 3. Live Data Fetching
-function fetchStats() {
+// Info Panel - Slides up
+gsap.from(".info-panel", {
+    scrollTrigger: { trigger: ".info-panel", start: "top bottom", scrub: 1 },
+    opacity: 0, y: 100
+});
+
+function update() {
     fetch('/api/stats').then(res => res.json()).then(data => {
         document.getElementById('totalAttacks').innerText = data.total_attacks;
         document.getElementById('uniqueIps').innerText = data.unique_ips;
-        document.getElementById('uniqueUsers').innerText = data.unique_usernames;
-        document.getElementById('uniquePass').innerText = data.unique_passwords;
-
         let html = "";
         data.recent_attacks.forEach(a => {
-            html += `<tr><td>${a.timestamp}</td><td>${a.ip}</td><td style="color:#ffae00">${a.location}</td><td>${a.username}</td></tr>`;
+            html += `<tr><td>${a.timestamp}</td><td>${a.ip}</td><td style="color:#ffae00">${a.location}</td><td>${a.username}:${a.password}</td><td style="color:#39ff14">${a.command}</td></tr>`;
         });
         document.getElementById('logsBody').innerHTML = html;
     });
 }
-setInterval(fetchStats, 3000);
-fetchStats();
+setInterval(update, 3000);
+update();
