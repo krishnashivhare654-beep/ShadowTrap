@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SHADOWTRAP | Global Threat Intelligence</title>
+    <title>SHADOWTRAP v3.0 | Global Threat Intelligence</title>
     <script src="//unpkg.com/globe.gl"></script>
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00f2fe; --pink: #ff0055; --bg: #020205; }
+        :root { --neon: #00f2fe; --pink: #ff0055; --bg: #020205; --success: #39ff14; }
         * { box-sizing: border-box; }
         body { margin: 0; background: var(--bg); color: white; font-family: 'Share Tech Mono', monospace; overflow: hidden; }
         
@@ -18,24 +18,30 @@
         .nav-btn { background: rgba(0, 242, 254, 0.1); border: 1px solid var(--neon); color: var(--neon); padding: 8px 15px; cursor: pointer; font-family: 'Audiowide'; font-size: 0.8rem; transition: 0.3s; }
         .nav-btn:hover { background: var(--neon); color: black; box-shadow: 0 0 15px var(--neon); }
 
-        .panel { pointer-events: auto; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); border: 1px solid var(--neon); border-radius: 4px; padding: 20px; box-shadow: 0 0 20px rgba(0, 242, 254, 0.2); display: none; position: absolute; z-index: 100; }
+        .panel { pointer-events: auto; background: rgba(0,0,0,0.9); backdrop-filter: blur(12px); border: 1px solid var(--neon); border-radius: 4px; padding: 20px; box-shadow: 0 0 25px rgba(0, 242, 254, 0.2); display: none; position: absolute; z-index: 100; }
         
         /* Floating Panels Positions */
-        #logs-panel { display: block; top: 80px; left: 20px; width: 320px; height: 60vh; overflow-y: auto; }
-        #stats-panel { top: 20px; right: 20px; width: 200px; text-align: center; display: block; }
-        #about-panel { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 450px; }
-        #help-panel { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 400px; }
+        #logs-panel { display: block; top: 80px; left: 20px; width: 350px; height: 65vh; overflow-y: auto; border-left: 4px solid var(--neon); }
+        #stats-panel { top: 20px; right: 20px; width: 220px; text-align: center; display: block; }
+        #about-panel, #help-panel { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px; }
 
-        .close-btn { float: right; color: var(--pink); cursor: pointer; font-weight: bold; }
+        .close-btn { float: right; color: var(--pink); cursor: pointer; font-weight: bold; font-family: 'Audiowide'; }
 
-        h2 { font-family: 'Audiowide', cursive; color: var(--neon); margin-top: 0; font-size: 1.1rem; }
-        .stat-num { font-size: 2.8rem; color: var(--neon); font-weight: bold; text-shadow: 0 0 10px var(--neon); }
+        h2 { font-family: 'Audiowide', cursive; color: var(--neon); margin-top: 0; font-size: 1.1rem; letter-spacing: 1px; }
+        .stat-num { font-size: 3rem; color: var(--neon); font-weight: bold; text-shadow: 0 0 15px var(--neon); }
         
-        .log-item { border-left: 2px solid var(--neon); padding-left: 10px; margin-bottom: 12px; cursor: pointer; font-size: 0.85rem; }
-        .log-item:hover { border-left-color: var(--pink); background: rgba(255,255,255,0.05); }
+        .log-item { border-bottom: 1px solid #222; padding: 12px 5px; cursor: pointer; transition: 0.2s; }
+        .log-item:hover { background: rgba(0, 242, 254, 0.1); }
+        .log-item b { color: var(--pink); font-size: 1rem; }
+        .log-info { font-size: 0.8rem; margin-top: 4px; }
+        .pass-text { color: var(--success); font-weight: bold; }
 
+        /* Mouse Ripple */
         .ripple { position: fixed; border: 2px solid var(--neon); border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); animation: ripple-anim 0.6s ease-out; z-index: 999; }
-        @keyframes ripple-anim { from { width: 0; height: 0; opacity: 1; } to { width: 80px; height: 80px; opacity: 0; } }
+        @keyframes ripple-anim { from { width: 0; height: 0; opacity: 1; } to { width: 100px; height: 100px; opacity: 0; } }
+        
+        /* Globe Tooltip Customization */
+        .scene-tooltip { background: rgba(0,0,0,0.9) !important; border: 1px solid var(--neon) !important; color: white !important; font-family: 'Share Tech Mono' !important; }
     </style>
 </head>
 <body>
@@ -45,7 +51,7 @@
         <div class="nav-buttons">
             <button class="nav-btn" onclick="togglePanel('about-panel')">ABOUT SYSTEM</button>
             <button class="nav-btn" onclick="togglePanel('help-panel')">OPERATIONAL HELP</button>
-            <button class="nav-btn" onclick="location.reload()">RESET VIEW</button>
+            <button class="nav-btn" onclick="location.reload()">REFRESH HUD</button>
         </div>
 
         <div class="panel" id="stats-panel">
@@ -54,38 +60,36 @@
         </div>
 
         <div class="panel" id="logs-panel">
-            <h2>🚨 REAL-TIME THREATS</h2>
+            <h2>🚨 THREAT INTELLIGENCE FEED</h2>
             <div id="logs-list"></div>
         </div>
 
         <div class="panel" id="about-panel">
-            <span class="close-btn" onclick="togglePanel('about-panel')">[X]</span>
+            <span class="close-btn" onclick="togglePanel('about-panel')">[ CLOSE ]</span>
             <h2>ℹ️ SYSTEM ARCHITECTURE</h2>
-            <p><b>ShadowTrap v3.0</b> is a high-interaction SSH honeypot. It uses 3D visualization to map attacker origins globally. Built by <b>Krishna Shivhare</b> for cybersecurity research and threat intelligence gathering.</p>
-            <p>Tech: Python, Flask, Globe.gl, SQLite3.</p>
+            <p><b>ShadowTrap v3.0</b> is an advanced SSH Honeypot decoy. It creates a simulated environment to trap hackers, providing real-time 3D visualization of global attack vectors.</p>
+            <p><b>Developer:</b> Krishna Shivhare<br><b>Focus:</b> Cyber Security & Threat Analysis</p>
         </div>
 
         <div class="panel" id="help-panel">
-            <span class="close-btn" onclick="togglePanel('help-panel')">[X]</span>
+            <span class="close-btn" onclick="togglePanel('help-panel')">[ CLOSE ]</span>
             <h2>❓ MISSION PROTOCOL</h2>
-            <p>To simulate an attack and test the trap:</p>
+            <p>To test the decoy and trigger the 3D Map:</p>
             <ol>
-                <li>Open a new terminal.</li>
-                <li>Run: <code style="color:var(--neon)">ssh root@localhost -p 2222</code></li>
-                <li>Enter any random password.</li>
-                <li>Watch the globe rotate to your location.</li>
+                <li>Launch terminal and run: <br><code style="color:var(--neon)">ssh root@localhost -p 2222</code></li>
+                <li>Submit any dummy password.</li>
+                <li>The system will capture the IP, Username, and Password.</li>
+                <li>Click on the log entry to auto-rotate Earth to the target's location.</li>
             </ol>
         </div>
     </div>
 
     <script>
-        // Toggle Panels
         function togglePanel(id) {
             const p = document.getElementById(id);
-            p.style.display = (p.style.display === 'block') ? 'none' : 'block';
+            p.style.display = (p.style.display === 'block' || p.style.display === '') ? 'none' : 'block';
         }
 
-        // Mouse Ripple
         window.addEventListener('mousedown', (e) => {
             const r = document.createElement('div');
             r.className = 'ripple';
@@ -94,40 +98,62 @@
             setTimeout(() => r.remove(), 600);
         });
 
-        // 3D Globe
+        // 3D Globe Initialization
         const world = Globe()
             .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
             .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
             .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+            // RED DOTS LOGIC
+            .pointsData([])
+            .pointLat('lat')
+            .pointLng('lon')
             .pointColor(() => '#ff0055')
-            .pointAltitude(0.1)
-            .pointRadius(0.6)
+            .pointAltitude(0.12)
+            .pointRadius(1.2)
+            .pointsMerge(true)
+            .pointLabel(d => `
+                <div style="padding: 10px; border: 1px solid #00f2fe; background: rgba(0,0,0,0.85);">
+                    <b style="color:#ff0055">INTRUSION DETECTED</b><br>
+                    IP: ${d.ip}<br>
+                    USER: ${d.username}<br>
+                    PASS: <span style="color:#39ff14">${d.password}</span><br>
+                    LOC: ${d.location}
+                </div>
+            `)
             (document.getElementById('globeViz'));
 
         world.controls().autoRotate = true;
         world.controls().autoRotateSpeed = 0.5;
 
-        // Data Refresh
-        function refresh() {
+        function refreshData() {
             fetch('/api/stats').then(res => res.json()).then(data => {
                 document.getElementById('total-count').innerText = data.total_attacks;
+                
                 let list = "";
                 data.recent_attacks.forEach(a => {
-                    list += `<div class="log-item" onclick="aimEarth(${a.lat}, ${a.lon})">
-                        <b>[${a.ip}]</b><br>${a.location}<br>USER: ${a.username}
+                    list += `
+                    <div class="log-item" onclick="aimEarth(${a.lat}, ${a.lon})">
+                        <b>[${a.ip}]</b><br>
+                        <div class="log-info">
+                            <span>LOC: ${a.location}</span><br>
+                            <span>USER: ${a.username}</span> | 
+                            <span>PASS: <span class="pass-text">${a.password}</span></span>
+                        </div>
                     </div>`;
                 });
-                document.getElementById('logs-list').innerHTML = list || "Waiting for hits...";
+                document.getElementById('logs-list').innerHTML = list || "Scanning for threats...";
+                
+                // Update Globe Points
                 world.pointsData(data.recent_attacks);
             });
         }
 
         function aimEarth(lat, lon) {
-            world.pointOfView({ lat: lat, lng: lon, altitude: 1.2 }, 2000);
+            world.pointOfView({ lat: lat, lng: lon, altitude: 1.5 }, 2000);
         }
 
-        setInterval(refresh, 4000);
-        refresh();
+        setInterval(refreshData, 4000);
+        refreshData();
     </script>
 </body>
 </html>
