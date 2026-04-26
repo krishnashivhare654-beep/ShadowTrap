@@ -10,27 +10,30 @@
         * { box-sizing: border-box; }
         body { margin: 0; background: var(--bg); color: white; font-family: 'Share Tech Mono', monospace; overflow: hidden; }
         
-        #globeViz { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        #globeViz { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        /* HUD Panels */
-        .hud { position: absolute; z-index: 10; pointer-events: none; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content:建设-between; padding: 20px; }
-        .panel { pointer-events: auto; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); border: 1px solid var(--neon); border-radius: 4px; padding: 15px; box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); }
-        
-        .top-bar { display: flex; justify-content: space-between; align-items: flex-start; }
-        .logs-box { width: 320px; height: 60vh; overflow-y: auto; }
-        .stats-box { width: 200px; text-align: center; }
-        
-        .bottom-bar { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; }
-        .info-panel { width: 280px; font-size: 0.85rem; }
+        /* HUD & Navigation */
+        .hud { position: absolute; z-index: 10; pointer-events: none; width: 100%; height: 100%; padding: 20px; display: flex; flex-direction: column; }
+        .nav-buttons { pointer-events: auto; display: flex; gap: 15px; margin-bottom: 20px; }
+        .nav-btn { background: rgba(0, 242, 254, 0.1); border: 1px solid var(--neon); color: var(--neon); padding: 8px 15px; cursor: pointer; font-family: 'Audiowide'; font-size: 0.8rem; transition: 0.3s; }
+        .nav-btn:hover { background: var(--neon); color: black; box-shadow: 0 0 15px var(--neon); }
 
-        h1, h2 { font-family: 'Audiowide', cursive; color: var(--neon); margin: 0 0 10px 0; font-size: 1.2rem; letter-spacing: 2px; }
-        .stat-num { font-size: 2.5rem; color: var(--neon); font-weight: bold; }
+        .panel { pointer-events: auto; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); border: 1px solid var(--neon); border-radius: 4px; padding: 20px; box-shadow: 0 0 20px rgba(0, 242, 254, 0.2); display: none; position: absolute; z-index: 100; }
         
-        .log-item { border-left: 2px solid var(--neon); padding-left: 10px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; }
+        /* Floating Panels Positions */
+        #logs-panel { display: block; top: 80px; left: 20px; width: 320px; height: 60vh; overflow-y: auto; }
+        #stats-panel { top: 20px; right: 20px; width: 200px; text-align: center; display: block; }
+        #about-panel { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 450px; }
+        #help-panel { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 400px; }
+
+        .close-btn { float: right; color: var(--pink); cursor: pointer; font-weight: bold; }
+
+        h2 { font-family: 'Audiowide', cursive; color: var(--neon); margin-top: 0; font-size: 1.1rem; }
+        .stat-num { font-size: 2.8rem; color: var(--neon); font-weight: bold; text-shadow: 0 0 10px var(--neon); }
+        
+        .log-item { border-left: 2px solid var(--neon); padding-left: 10px; margin-bottom: 12px; cursor: pointer; font-size: 0.85rem; }
         .log-item:hover { border-left-color: var(--pink); background: rgba(255,255,255,0.05); }
-        .log-item b { color: var(--pink); }
 
-        /* Ripple Cursor */
         .ripple { position: fixed; border: 2px solid var(--neon); border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); animation: ripple-anim 0.6s ease-out; z-index: 999; }
         @keyframes ripple-anim { from { width: 0; height: 0; opacity: 1; } to { width: 80px; height: 80px; opacity: 0; } }
     </style>
@@ -39,71 +42,88 @@
     <div id="globeViz"></div>
 
     <div class="hud">
-        <div class="top-bar">
-            <div class="panel logs-box">
-                <h2>🚨 THREAT FEED</h2>
-                <div id="logs-list"></div>
-            </div>
-            <div class="panel stats-box">
-                <h2>TOTAL HITS</h2>
-                <div class="stat-num" id="total-count">0</div>
-            </div>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="togglePanel('about-panel')">ABOUT SYSTEM</button>
+            <button class="nav-btn" onclick="togglePanel('help-panel')">OPERATIONAL HELP</button>
+            <button class="nav-btn" onclick="location.reload()">RESET VIEW</button>
         </div>
 
-        <div class="bottom-bar">
-            <div class="panel info-panel">
-                <h2>ℹ️ SYSTEM INFO</h2>
-                <p>ShadowTrap v3.0<br>Role: Intelligent SSH Decoy<br>Status: Monitoring...</p>
-            </div>
-            <div class="panel info-panel">
-                <h2>❓ PROTOCOL</h2>
-                <p>To test: <code style="color:var(--neon)">ssh root@localhost -p 2222</code><br>Click any log to rotate Earth.</p>
-            </div>
+        <div class="panel" id="stats-panel">
+            <h2>TOTAL HITS</h2>
+            <div class="stat-num" id="total-count">0</div>
+        </div>
+
+        <div class="panel" id="logs-panel">
+            <h2>🚨 REAL-TIME THREATS</h2>
+            <div id="logs-list"></div>
+        </div>
+
+        <div class="panel" id="about-panel">
+            <span class="close-btn" onclick="togglePanel('about-panel')">[X]</span>
+            <h2>ℹ️ SYSTEM ARCHITECTURE</h2>
+            <p><b>ShadowTrap v3.0</b> is a high-interaction SSH honeypot. It uses 3D visualization to map attacker origins globally. Built by <b>Krishna Shivhare</b> for cybersecurity research and threat intelligence gathering.</p>
+            <p>Tech: Python, Flask, Globe.gl, SQLite3.</p>
+        </div>
+
+        <div class="panel" id="help-panel">
+            <span class="close-btn" onclick="togglePanel('help-panel')">[X]</span>
+            <h2>❓ MISSION PROTOCOL</h2>
+            <p>To simulate an attack and test the trap:</p>
+            <ol>
+                <li>Open a new terminal.</li>
+                <li>Run: <code style="color:var(--neon)">ssh root@localhost -p 2222</code></li>
+                <li>Enter any random password.</li>
+                <li>Watch the globe rotate to your location.</li>
+            </ol>
         </div>
     </div>
 
     <script>
-        // 1. Mouse Ripple Logic
+        // Toggle Panels
+        function togglePanel(id) {
+            const p = document.getElementById(id);
+            p.style.display = (p.style.display === 'block') ? 'none' : 'block';
+        }
+
+        // Mouse Ripple
         window.addEventListener('mousedown', (e) => {
             const r = document.createElement('div');
             r.className = 'ripple';
-            r.style.left = e.clientX + 'px';
-            r.style.top = e.clientY + 'px';
+            r.style.left = e.clientX + 'px'; r.style.top = e.clientY + 'px';
             document.body.appendChild(r);
             setTimeout(() => r.remove(), 600);
         });
 
-        // 2. 3D Globe Config
+        // 3D Globe
         const world = Globe()
             .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
             .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
             .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
             .pointColor(() => '#ff0055')
             .pointAltitude(0.1)
-            .pointRadius(0.5)
+            .pointRadius(0.6)
             (document.getElementById('globeViz'));
 
         world.controls().autoRotate = true;
-        world.controls().autoRotateSpeed = 0.6;
+        world.controls().autoRotateSpeed = 0.5;
 
-        // 3. Live Sync
+        // Data Refresh
         function refresh() {
             fetch('/api/stats').then(res => res.json()).then(data => {
                 document.getElementById('total-count').innerText = data.total_attacks;
-                
                 let list = "";
                 data.recent_attacks.forEach(a => {
                     list += `<div class="log-item" onclick="aimEarth(${a.lat}, ${a.lon})">
-                        <b>${a.ip}</b><br>${a.location}<br>CMD: ${a.command}
+                        <b>[${a.ip}]</b><br>${a.location}<br>USER: ${a.username}
                     </div>`;
                 });
-                document.getElementById('logs-list').innerHTML = list;
+                document.getElementById('logs-list').innerHTML = list || "Waiting for hits...";
                 world.pointsData(data.recent_attacks);
             });
         }
 
         function aimEarth(lat, lon) {
-            world.pointOfView({ lat: lat, lng: lon, altitude: 1.5 }, 2000);
+            world.pointOfView({ lat: lat, lng: lon, altitude: 1.2 }, 2000);
         }
 
         setInterval(refresh, 4000);
