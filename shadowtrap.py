@@ -1,144 +1,111 @@
-"""
-ShadowTrap - Intelligent SSH HoneyPot
-Author: Krishna
-"""
-
 import socket
 import threading
 import paramiko
-import logging
 import sqlite3
 import os
+import requests
 from datetime import datetime
 from colorama import Fore, init
 
 init(autoreset=True)
 
+# Fake SSH Key & Server Config
 HOST_KEY = paramiko.RSAKey.generate(2048)
 LISTEN_IP = "0.0.0.0"
 LISTEN_PORT = 2222
 DB_PATH = "logs/attacks.db"
 
 os.makedirs("logs", exist_ok=True)
-logging.basicConfig(
-    filename="logs/honeypot.log",
-    level=logging.INFO,
-    format="%(asctime)s - %(message)s"
-)
+
+def get_geo_info(ip):
+    try:
+        if ip in ["127.0.0.1", "localhost"]: return "Localhost", "IN"
+        res = requests.get(f"http://ip-api.com/json/{ip}?fields=status,country,city", timeout=3).json()
+        if res.get('status') == 'success':
+            return res.get('city'), res.get('country')
+    except: pass
+    return "Unknown", "Unknown"
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS attacks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT,
-        ip TEXT,
-        username TEXT,
-        password TEXT,
-        command TEXT
+        timestamp TEXT, ip TEXT, location TEXT, 
+        username TEXT, password TEXT, command TEXT
     )''')
     conn.commit()
     conn.close()
 
 def log_attack(ip, username, password, command="LOGIN_ATTEMPT"):
+    city, country = get_geo_info(ip)
+    loc = f"{city}, {country}"
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("INSERT INTO attacks (timestamp, ip, username, password, command) VALUES (?, ?, ?, ?, ?)",
-              (datetime.now().isoformat(), ip, username, password, command))
+    c.execute("INSERT INTO attacks (timestamp, ip, location, username, password, command) VALUES (?, ?, ?, ?, ?, ?)",
+              (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ip, loc, username, password, command))
     conn.commit()
     conn.close()
 
-class HoneyPotServer(paramiko.ServerInterface):
+class ShadowServer(paramiko.ServerInterface):
     def __init__(self, client_ip):
         self.client_ip = client_ip
         self.event = threading.Event()
 
     def check_auth_password(self, username, password):
-        print(f"{Fore.RED}[⚠️ ATTACK DETECTED] {self.client_ip} → {username}:{password}")
-        logging.info(f"ATTACK | IP: {self.client_ip} | User: {username} | Pass: {password}")
+        print(f"{Fore.RED}[!] ATTACK: {self.client_ip} | {username}:{password}")
         log_attack(self.client_ip, username, password)
-        return paramiko.AUTH_FAILED
+        return paramiko.AUTH_SUCCESSFUL # Let them in!
 
-    def get_allowed_auths(self, username):
-        return "password"
-
-    def check_channel_request(self, kind, chanid):
-        if kind == "session":
-            return paramiko.OPEN_SUCCEEDED
-        return paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
-
-    def check_channel_shell_request(self, channel):
-        self.event.set()
-        return True
-
-    def check_channel_pty_request(self, channel, term, width, height, pixelwidth, pixelheight, modes):
-        return True
+    def get_allowed_auths(self, username): return "password"
+    def check_channel_request(self, kind, chanid): return paramiko.OPEN_SUCCEEDED if kind == "session" else paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
+    def check_channel_shell_request(self, channel): self.event.set(); return True
+    def check_channel_pty_request(self, *args): return True
 
 def handle_connection(client, addr):
     client_ip = addr[0]
-    print(f"{Fore.YELLOW}[+] New connection from {client_ip}")
-    transport = None
+    transport = paramiko.Transport(client)
+    transport.add_server_key(HOST_KEY)
+    transport.local_version = "SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.5"
+    
+    server = ShadowServer(client_ip)
     try:
-        transport = paramiko.Transport(client)
-        transport.add_server_key(HOST_KEY)
-        transport.local_version = "SSH-2.0-OpenSSH_7.4"
-
-        server = HoneyPotServer(client_ip)
         transport.start_server(server=server)
-
         channel = transport.accept(20)
-        if channel is None:
-            return
+        if not channel: return
+        
+        server.event.wait(5)
+        channel.send("\r\nWelcome to Ubuntu 20.04.4 LTS\r\nroot@ubuntu:~# ")
 
-        server.event.wait(10)
-        channel.send("\r\nWelcome to Ubuntu 20.04 LTS\r\n".encode())
-        channel.send("root@server:~# ".encode())
-
-        command_buffer = ""
+        cmd_buf = ""
         while True:
-            data = channel.recv(1024).decode("utf-8", errors="ignore")
-            if not data:
-                break
-            
-            if data == "\r" or data == "\n":
-                if command_buffer.strip():
-                    print(f"{Fore.CYAN}[CMD] {client_ip} → {command_buffer}")
-                    log_attack(client_ip, "session", "session", command_buffer)
-                    channel.send(f"\r\nbash: {command_buffer}: command not found\r\n".encode())
-                command_buffer = ""
-                channel.send("root@server:~# ".encode())
+            char = channel.recv(1).decode("utf-8", errors="ignore")
+            if not char: break
+            if char == "\r":
+                channel.send("\r\n")
+                if cmd_buf.strip():
+                    log_attack(client_ip, "root", "LOGGED_IN", cmd_buf.strip())
+                    if cmd_buf.strip() == "ls": channel.send("etc  home  var  root  bin\r\n")
+                    else: channel.send(f"bash: {cmd_buf.strip()}: command not found\r\n")
+                channel.send("root@ubuntu:~# ")
+                cmd_buf = ""
+            elif char == "\x7f": # Backspace
+                if cmd_buf:
+                    cmd_buf = cmd_buf[:-1]; channel.send("\b \b")
             else:
-                command_buffer += data
-                channel.send(data.encode())
+                cmd_buf += char; channel.send(char)
+    except: pass
+    finally: transport.close()
 
-    except Exception as e:
-        logging.error(f"Error: {e}")
-    finally:
-        try:
-            if transport:
-                transport.close()
-        except:
-            pass
-
-def start_honeypot():
+def main():
     init_db()
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind((LISTEN_IP, LISTEN_PORT))
     sock.listen(100)
-
-    print(f"{Fore.GREEN}╔══════════════════════════════════════════╗")
-    print(f"{Fore.GREEN}║   🕸️  SHADOWTRAP HONEYPOT ACTIVE  🕸️    ║")
-    print(f"{Fore.GREEN}║   Listening on {LISTEN_IP}:{LISTEN_PORT}        ║")
-    print(f"{Fore.GREEN}╚══════════════════════════════════════════╝")
-
+    print(f"{Fore.CYAN}🕸️ SHADOWTRAP ACTIVE ON PORT {LISTEN_PORT}")
     while True:
-        try:
-            client, addr = sock.accept()
-            threading.Thread(target=handle_connection, args=(client, addr), daemon=True).start()
-        except KeyboardInterrupt:
-            print(f"\n{Fore.RED}[!] ShadowTrap shutting down...")
-            break
+        client, addr = sock.accept()
+        threading.Thread(target=handle_connection, args=(client, addr), daemon=True).start()
 
-if __name__ == "__main__":
-    start_honeypot()
+if __name__ == "__main__": main()

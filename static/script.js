@@ -1,165 +1,50 @@
-// Live Time Display
-function updateTime() {
-    const now = new Date();
-    const time = now.toLocaleTimeString('en-US', { hour12: false });
-    document.getElementById('liveTime').textContent = `[${time}]`;
-}
-setInterval(updateTime, 1000);
-updateTime();
+gsap.registerPlugin(ScrollTrigger);
 
-// Chart instances
-let usernameChart = null;
-let passwordChart = null;
-
-// Initialize Charts
-function initCharts() {
-    Chart.defaults.color = '#00ff41';
-    Chart.defaults.font.family = 'Share Tech Mono';
+// 1. Mouse Tracking & Big Cursor
+const cursor = document.getElementById('cursor-visual');
+window.addEventListener('mousemove', (e) => {
+    gsap.to(cursor, { x: e.clientX - 20, y: e.clientY - 20, duration: 0.2 });
     
-    const usernameCtx = document.getElementById('usernameChart').getContext('2d');
-    usernameChart = new Chart(usernameCtx, {
-        type: 'bar',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Attempts',
-                data: [],
-                backgroundColor: 'rgba(255, 0, 64, 0.6)',
-                borderColor: '#ff0040',
-                borderWidth: 2,
-                borderRadius: 5
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(0, 255, 65, 0.1)' },
-                    ticks: { color: '#00ff41' }
-                },
-                x: {
-                    grid: { color: 'rgba(0, 255, 65, 0.1)' },
-                    ticks: { color: '#00ff41' }
-                }
-            }
-        }
-    });
-
-    const passwordCtx = document.getElementById('passwordChart').getContext('2d');
-    passwordChart = new Chart(passwordCtx, {
-        type: 'bar',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Attempts',
-                data: [],
-                backgroundColor: 'rgba(255, 136, 0, 0.6)',
-                borderColor: '#ff8800',
-                borderWidth: 2,
-                borderRadius: 5
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(0, 255, 65, 0.1)' },
-                    ticks: { color: '#00ff41' }
-                },
-                x: {
-                    grid: { color: 'rgba(0, 255, 65, 0.1)' },
-                    ticks: { color: '#00ff41' }
-                }
-            }
-        }
-    });
-}
-
-// Animate counter
-function animateNumber(element, target) {
-    const current = parseInt(element.textContent) || 0;
-    const increment = (target - current) / 20;
-    let value = current;
-    
-    const interval = setInterval(() => {
-        value += increment;
-        if ((increment > 0 && value >= target) || (increment < 0 && value <= target)) {
-            element.textContent = target;
-            clearInterval(interval);
-        } else {
-            element.textContent = Math.floor(value);
-        }
-    }, 30);
-}
-
-// Fetch and update data
-async function fetchData() {
-    try {
-        const response = await fetch('/api/stats');
-        const data = await response.json();
-        
-        // Update stat cards
-        animateNumber(document.getElementById('totalAttacks'), data.total_attacks);
-        animateNumber(document.getElementById('uniqueIps'), data.unique_ips);
-        animateNumber(document.getElementById('uniqueUsernames'), data.unique_usernames);
-        animateNumber(document.getElementById('uniquePasswords'), data.unique_passwords);
-        
-        // Update username chart
-        if (usernameChart && data.top_usernames.length > 0) {
-            usernameChart.data.labels = data.top_usernames.map(u => u.username);
-            usernameChart.data.datasets[0].data = data.top_usernames.map(u => u.count);
-            usernameChart.update();
-        }
-        
-        // Update password chart
-        if (passwordChart && data.top_passwords.length > 0) {
-            passwordChart.data.labels = data.top_passwords.map(p => p.password);
-            passwordChart.data.datasets[0].data = data.top_passwords.map(p => p.count);
-            passwordChart.update();
-        }
-        
-        // Update IP list
-        const ipList = document.getElementById('ipList');
-        if (data.top_ips.length > 0) {
-            ipList.innerHTML = data.top_ips.map(ip => `
-                <div class="ip-item">
-                    <span class="ip-addr">🌐 ${ip.ip}</span>
-                    <span class="ip-count">${ip.count} attacks</span>
-                </div>
-            `).join('');
-        }
-        
-        // Update attacks table
-        const tbody = document.getElementById('attacksBody');
-        if (data.recent_attacks.length > 0) {
-            tbody.innerHTML = data.recent_attacks.map(attack => `
-                <tr>
-                    <td>🕐 ${attack.timestamp}</td>
-                    <td style="color: #ff0040;">${attack.ip}</td>
-                    <td style="color: #ffdd00;">${attack.username}</td>
-                    <td style="color: #ff8800;">${attack.password}</td>
-                    <td style="color: #00d4ff;">${attack.command}</td>
-                </tr>
-            `).join('');
-        }
-        
-    } catch (error) {
-        console.error('Error fetching data:', error);
+    // Create Water Ripple effect
+    if (Math.random() > 0.9) { // Har move par nahi, thode gaps pe
+        createRipple(e.clientX, e.clientY);
     }
+});
+
+function createRipple(x, y) {
+    const ripple = document.createElement('div');
+    ripple.className = 'ripple';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    document.body.appendChild(ripple);
+    setTimeout(() => { ripple.remove(); }, 1000);
 }
 
-// Initialize
-window.addEventListener('DOMContentLoaded', () => {
-    initCharts();
-    fetchData();
-    // Refresh every 2 seconds
-    setInterval(fetchData, 2000);
+// 2. 3D Scrolling Animations
+gsap.to(".home-panel", {
+    scrollTrigger: { trigger: ".home-panel", start: "top top", scrub: 1 },
+    scale: 0.2, opacity: 0, rotateX: 45, z: -1000
 });
+
+gsap.from(".monitor-panel", {
+    scrollTrigger: { trigger: ".monitor-panel", start: "top bottom", end: "top center", scrub: 1 },
+    scale: 2, opacity: 0, rotateX: -45, z: 1000
+});
+
+// 3. Live Data Fetching
+function fetchStats() {
+    fetch('/api/stats').then(res => res.json()).then(data => {
+        document.getElementById('totalAttacks').innerText = data.total_attacks;
+        document.getElementById('uniqueIps').innerText = data.unique_ips;
+        document.getElementById('uniqueUsers').innerText = data.unique_usernames;
+        document.getElementById('uniquePass').innerText = data.unique_passwords;
+
+        let html = "";
+        data.recent_attacks.forEach(a => {
+            html += `<tr><td>${a.timestamp}</td><td>${a.ip}</td><td style="color:#ffae00">${a.location}</td><td>${a.username}</td></tr>`;
+        });
+        document.getElementById('logsBody').innerHTML = html;
+    });
+}
+setInterval(fetchStats, 3000);
+fetchStats();
