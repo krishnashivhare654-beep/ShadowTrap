@@ -7,29 +7,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root { --neon: #00f2fe; --bg: #050505; --card: #0a0a0c; --crit: #ff3131; }
-        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: var(--bg); color: white; font-family: 'Share Tech Mono', monospace; }
         nav { background: rgba(0,0,0,0.9); padding: 15px 50px; display: flex; justify-content: space-between; border-bottom: 1px solid #222; position: sticky; top: 0; z-index: 1000; }
         .logo { font-family: 'Orbitron'; color: var(--neon); font-size: 1.4rem; text-shadow: 0 0 10px var(--neon); }
-        .nav-links button { background: none; border: none; color: #666; margin-left: 20px; font-family: 'Orbitron'; font-size: 0.8rem; cursor: pointer; transition: 0.3s; }
-        .nav-links button.active, .nav-links button:hover { color: var(--neon); text-shadow: 0 0 8px var(--neon); }
-        
+        .nav-links button { background: none; border: none; color: #666; margin-left: 20px; font-family: 'Orbitron'; font-size: 0.8rem; cursor: pointer; }
+        .nav-links button.active { color: var(--neon); text-shadow: 0 0 8px var(--neon); }
         .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content { display: none; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .card { background: var(--card); border: 1px solid #1a1a1a; padding: 25px; border-radius: 4px; transition: 0.4s; margin-bottom: 20px; }
-        .card:hover { transform: scale(1.02); border-color: var(--neon); }
+        .card { background: var(--card); border: 1px solid #1a1a1a; padding: 25px; border-radius: 4px; transition: 0.3s; margin-bottom: 20px; }
+        .card:hover { transform: translateY(-5px); border-color: var(--neon); }
         h2 { font-family: 'Orbitron'; color: var(--neon); font-size: 1rem; margin-bottom: 20px; border-left: 3px solid var(--neon); padding-left: 15px; }
-
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; color: #555; border-bottom: 1px solid #222; font-size: 0.8rem; }
+        th { text-align: left; padding: 15px; color: #555; border-bottom: 1px solid #222; }
         td { padding: 15px; border-bottom: 1px solid #111; font-size: 0.9rem; }
         .badge-crit { color: var(--crit); border: 1px solid var(--crit); padding: 2px 5px; }
         .badge-med { color: #ffae00; border: 1px solid #ffae00; padding: 2px 5px; }
-        
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; }
         .modal-box { width: 600px; background: #000; border: 1px solid var(--neon); padding: 25px; }
     </style>
@@ -44,49 +38,26 @@
             <button onclick="openTab('help')" id="btn-help">HELP</button>
         </div>
     </nav>
-
     <div class="container">
         <section id="monitor" class="tab-content active">
             <div class="card">
-                <h2>🚨 LIVE INTRUSION FEED</h2>
+                <h2>🚨 LIVE FEED</h2>
                 <table>
-                    <thead><tr><th>TIME</th><th>SOURCE_IP</th><th>LOCATION</th><th>THREAT</th><th>ACTION</th></tr></thead>
+                    <thead><tr><th>TIME</th><th>IP</th><th>LOCATION</th><th>LEVEL</th><th>ACTION</th></tr></thead>
                     <tbody id="logsBody"></tbody>
                 </table>
             </div>
         </section>
-
         <section id="analytics" class="tab-content">
-            <div class="grid">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
                 <div class="card"><h2>📊 RISK LEVEL</h2><canvas id="threatChart"></canvas></div>
                 <div class="card"><h2>👤 TOP TARGETS</h2><canvas id="userChart"></canvas></div>
             </div>
         </section>
-
-        <section id="about" class="tab-content">
-            <div class="card">
-                <h2>📖 PROJECT ARCHITECTURE</h2>
-                <p style="color:#888; line-height:1.6;">ShadowTrap is a forensic SSH honeypot. It records real-time hacker activity including brute-force credentials and post-login commands to build threat intelligence reports.</p>
-            </div>
-        </section>
-
-        <section id="help" class="tab-content">
-            <div class="card">
-                <h2>❓ HOW TO TEST</h2>
-                <p style="color:#888;">Run this command in Termux/Terminal:</p>
-                <div style="background:#000; padding:15px; color:var(--neon); margin:15px 0; border:1px dashed #444;">ssh root@10.16.71.2 -p 2222</div>
-            </div>
-        </section>
+        <section id="about" class="tab-content"><div class="card"><h2>📖 ABOUT</h2><p>Forensic SSH Honeypot for tracking global threats.</p></div></section>
+        <section id="help" class="tab-content"><div class="card"><h2>❓ TEST</h2><p>ssh root@10.16.71.2 -p 2222 -T</p></div></section>
     </div>
-
-    <div id="replayModal" class="modal">
-        <div class="modal-box">
-            <span onclick="document.getElementById('replayModal').style.display='none'" style="float:right; cursor:pointer; color:red;">[CLOSE]</span>
-            <h2 style="border:none;">> REPLAY_DATA</h2>
-            <div id="replayText" style="background:#020202; color:#39ff14; padding:20px; font-family:monospace; min-height:200px;"></div>
-        </div>
-    </div>
-
+    <div id="replayModal" class="modal"><div class="modal-box"><span onclick="document.getElementById('replayModal').style.display='none'" style="float:right; cursor:pointer; color:red;">[X]</span><h2>> REPLAY</h2><div id="replayText" style="background:#020202; color:#39ff14; padding:20px; font-family:monospace; min-height:200px;"></div></div></div>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

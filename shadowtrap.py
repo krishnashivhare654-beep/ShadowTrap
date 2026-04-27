@@ -4,12 +4,15 @@ import datetime
 import requests
 import threading
 import socket
+import os
 
 # --- CONFIGURATION ---
 PORT = 2222
 DB_PATH = "logs/attacks.db"
 
-# Database Setup
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -24,11 +27,9 @@ def get_location(ip):
         if ip == "127.0.0.1" or ip.startswith("192.168") or ip.startswith("10."):
             return "Local Network (Admin)"
         response = requests.get(f"http://ip-api.com/json/{ip}", timeout=5).json()
-        if response.get('status') == 'success':
-            return f"{response['city']}, {response['country']}"
-        return "Unknown Location"
+        return f"{response['city']}, {response['country']}" if response.get('status') == 'success' else "Unknown"
     except:
-        return "Offline/Local"
+        return "Offline/VPN"
 
 def log_to_db(ip, user, password, cmd, level):
     conn = sqlite3.connect(DB_PATH)
@@ -47,31 +48,32 @@ class HoneyServer(paramiko.ServerInterface):
         log_to_db(self.client_ip, username, password, "LOGIN_ATTEMPT", "Medium")
         return paramiko.AUTH_SUCCESSFUL
     def check_channel_request(self, kind, chanid):
-        return paramiko.OPEN_SUCCEEDED if kind == "session" else paramiko.OPEN_FAILED
+        return paramiko.OPEN_SUCCEEDED
 
 def handle_connection(client, addr):
     client_ip = addr[0]
     transport = paramiko.Transport(client)
-    host_key = paramiko.RSAKey.generate(2048)
-    transport.add_server_key(host_key)
-    server = HoneyServer(client_ip)
-    transport.start_server(server=server)
-    chan = transport.accept(20)
-    if chan:
-        chan.send("Welcome to Ubuntu 20.04.4 LTS\r\n")
-        while True:
-            chan.send("root@ubuntu:~# ")
-            cmd = ""
-            while not cmd.endswith("\r"):
-                char = chan.recv(1).decode()
-                cmd += char
-                chan.send(char)
-            cmd = cmd.strip()
-            if cmd == "exit": break
-            level = "CRITICAL" if any(x in cmd for x in ["rm", "wget", "curl", "sudo"]) else "Low"
-            log_to_db(client_ip, "root", "N/A", cmd, level)
-            chan.send("\r\nCommand Not Found or Access Denied\r\n")
-    transport.close()
+    transport.add_server_key(paramiko.RSAKey.generate(2048))
+    transport.banner_timeout = 60
+    
+    try:
+        server = HoneyServer(client_ip)
+        transport.start_server(server=server)
+        chan = transport.accept(60)
+        if chan:
+            chan.send("\r\nWelcome to ShadowTrap OS v3.2 (LTS)\r\n")
+            while True:
+                chan.send("\r\nroot@ubuntu:~# ")
+                data = chan.recv(1024).decode().strip()
+                if not data or data == 'exit': break
+                
+                level = "CRITICAL" if any(x in data for x in ["rm", "wget", "sudo", "apt"]) else "Low"
+                log_to_db(client_ip, "root", "N/A", data, level)
+                chan.send(f"\r\nCommand '{data}' executed successfully.\r\n")
+    except Exception:
+        pass # Silently handle disconnects to keep the video smooth
+    finally:
+        transport.close()
 
 def start_engine():
     init_db()
