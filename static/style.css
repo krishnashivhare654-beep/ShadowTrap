@@ -1,25 +1,15 @@
-/* In properties ko update karo body aur panel mein */
-body {
+.monitor-sec {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* 'center' ki jagah 'flex-start' taaki table upar se shuru ho */
+    padding-top: 50px;
     background: var(--bg);
-    color: white;
-    font-family: 'Share Tech Mono', monospace;
-    overflow-x: hidden;
-    /* GPU acceleration force karne ke liye */
-    transform: translateZ(0);
-    backface-visibility: hidden;
 }
 
-.panel { 
-    height: 100vh; width: 100%; 
-    display: flex; flex-direction: column; 
-    justify-content: center; align-items: center; 
-    transform-style: preserve-3d; 
-    position: sticky; top: 0;
-    will-change: transform, opacity; /* Browser ko pehle se batane ke liye */
-}
-
-/* Charts ko thoda chhota karo taaki render fast ho */
-.chart-container-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
-    width: 70%; transform: translateZ(50px);
+table {
+    width: 95%; /* Thoda wide karo */
+    max-height: 70vh; /* Scrollable area badhao */
+    overflow-y: auto;
 }
