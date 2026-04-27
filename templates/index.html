@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ShadowTrap | Forensic Analysis</title>
+    <title>ShadowTrap | 3D Cyber Intel</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -15,27 +15,19 @@
         <section class="panel home-panel">
             <div class="hero-box">
                 <h1 class="glitch-title">SHADOWTRAP</h1>
-                <p class="tagline">FORENSIC REPLAY SYSTEM</p>
-                <div class="scroll-hint">SCROLL TO REPLAY ATTACKS</div>
+                <p style="color:var(--neon); text-align:center; letter-spacing:5px;">V3.2 FORENSIC ENGINE</p>
+                <div style="margin-top:50px; text-align:center; color:#555;">↓↓ SCROLL TO ENTER 3D MONITOR ↓↓</div>
             </div>
         </section>
 
         <section class="panel monitor-panel">
-            <div class="monitor-content">
-                <div class="stats-row">
-                    <div class="stat-card hover-big">
-                        <h2 id="totalAttacks">0</h2><p>TOTAL HITS</p>
-                    </div>
-                </div>
-                
-                <div class="logs-window hover-big">
-                    <h3 class="window-title">🚨 RISK FEED (CLICK ROW TO REPLAY)</h3>
-                    <div class="table-scroll">
-                        <table>
-                            <thead><tr><th>TIME</th><th>IP</th><th>LOCATION</th><th>USER:PASS</th><th>LEVEL</th><th>ACTION</th></tr></thead>
-                            <tbody id="logsBody"></tbody>
-                        </table>
-                    </div>
+            <div class="logs-window">
+                <h2 style="color:var(--neon); margin-bottom:20px; font-family:Orbitron;">🚨 THREAT MONITOR [ <span id="totalAttacks">0</span> ]</h2>
+                <div style="max-height:50vh; overflow-y:auto;">
+                    <table>
+                        <thead><tr><th>TIMESTAMP</th><th>SOURCE IP</th><th>LOCATION</th><th>CREDENTIALS</th><th>LEVEL</th><th>FORENSICS</th></tr></thead>
+                        <tbody id="logsBody"></tbody>
+                    </table>
                 </div>
             </div>
         </section>
@@ -43,11 +35,10 @@
 
     <div id="replayModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeReplay()">[ CLOSE ]</span>
-            <h2 style="color:var(--neon)">> FORENSIC_REPLAY_MODE</h2>
-            <div id="terminalBody" class="fake-terminal">
-                <span style="color:var(--low)">[SYSTEM]: Initializing session playback...</span><br>
-                <span id="replayText"></span><span class="cursor">_</span>
+            <span onclick="closeReplay()" style="float:right; cursor:pointer; color:var(--pink);">[ CLOSE ]</span>
+            <h3 style="color:var(--neon); margin-bottom:15px;">> FORENSIC_REPLAY_MODE</h3>
+            <div class="fake-terminal">
+                <span id="replayText"></span><span class="cursor"></span>
             </div>
         </div>
     </div>

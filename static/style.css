@@ -2,27 +2,36 @@
 * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
 body { background: var(--bg); color: white; font-family: 'Share Tech Mono', monospace; overflow-x: hidden; }
 
-#cursor-glow { position: fixed; width: 30px; height: 30px; background: var(--neon); border-radius: 50%; pointer-events: none; z-index: 9999; filter: blur(15px); }
+#cursor-glow { position: fixed; width: 30px; height: 30px; background: var(--neon); border-radius: 50%; pointer-events: none; z-index: 9999; filter: blur(15px); box-shadow: 0 0 30px var(--neon); }
 
-.perspective-wrapper { perspective: 2000px; }
-.panel { height: 100vh; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; transform-style: preserve-3d; }
-.glitch-title { font-family: 'Orbitron', sans-serif; font-size: 7rem; font-weight: 900; background: linear-gradient(to right, var(--neon), var(--purple), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.perspective-wrapper { 
+    perspective: 1500px; 
+    height: 300vh; /* Scroll space for 3D effect */
+}
 
-/* Table Styling */
+.panel { 
+    height: 100vh; width: 100%; 
+    display: flex; flex-direction: column; 
+    justify-content: center; align-items: center; 
+    transform-style: preserve-3d; 
+    position: sticky; top: 0;
+}
+
+.glitch-title { font-family: 'Orbitron', sans-serif; font-size: 6rem; font-weight: 900; background: linear-gradient(to right, var(--neon), var(--purple), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
+
+/* Table & Replay UI */
+.logs-window { width: 90%; max-width: 1100px; background: rgba(0,0,0,0.8); border: 1px solid var(--purple); padding: 20px; box-shadow: 0 0 40px rgba(112, 0, 255, 0.2); }
 table { width: 100%; text-align: left; border-collapse: collapse; }
-th, td { padding: 12px; border-bottom: 1px solid #111; }
-.replay-btn { background: var(--neon); color: black; border: none; padding: 5px 10px; font-family: 'Orbitron'; font-size: 0.6rem; cursor: pointer; border-radius: 2px; }
+th, td { padding: 12px; border-bottom: 1px solid #111; font-size: 0.85rem; }
 
-/* Modal & Terminal */
-.modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); }
-.modal-content { position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 700px; background: #000; border: 1px solid var(--neon); padding: 30px; }
-.close-modal { float: right; cursor: pointer; color: var(--pink); font-family: 'Orbitron'; }
+/* Fixed Modal Replay */
+.modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.96); justify-content: center; align-items: center; }
+.modal-content { width: 700px; background: #000; border: 1px solid var(--neon); padding: 30px; box-shadow: 0 0 50px var(--neon); }
+.fake-terminal { background: #050505; min-height: 250px; padding: 20px; border: 1px solid #222; color: var(--low); font-size: 1.1rem; }
+.cursor { display: inline-block; width: 10px; height: 1.2rem; background: var(--low); animation: blink 1s step-end infinite; vertical-align: middle; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-.fake-terminal { background: #050505; height: 300px; padding: 15px; border: 1px solid #222; margin-top: 20px; overflow-y: auto; font-size: 1.1rem; line-height: 1.5; color: var(--low); }
-.cursor { animation: blink 1s infinite; }
-@keyframes blink { 50% { opacity: 0; } }
-
-.badge { padding: 4px 8px; border-radius: 3px; font-weight: bold; }
-.badge-critical { background: var(--critical); color: #fff; }
+.badge { padding: 4px 8px; border-radius: 2px; font-weight: bold; }
+.badge-critical { background: var(--critical); }
 .badge-medium { background: var(--medium); color: #000; }
 .badge-low { background: var(--low); color: #000; }
