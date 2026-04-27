@@ -1,17 +1,25 @@
-/* Previous styles same... add these: */
-
-.chart-container-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    width: 85%;
-    max-width: 1100px;
+/* In properties ko update karo body aur panel mein */
+body {
+    background: var(--bg);
+    color: white;
+    font-family: 'Share Tech Mono', monospace;
+    overflow-x: hidden;
+    /* GPU acceleration force karne ke liye */
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
-.chart-box {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--purple);
-    padding: 20px;
-    border-radius: 4px;
-    box-shadow: 0 0 20px rgba(112, 0, 255, 0.1);
+.panel { 
+    height: 100vh; width: 100%; 
+    display: flex; flex-direction: column; 
+    justify-content: center; align-items: center; 
+    transform-style: preserve-3d; 
+    position: sticky; top: 0;
+    will-change: transform, opacity; /* Browser ko pehle se batane ke liye */
+}
+
+/* Charts ko thoda chhota karo taaki render fast ho */
+.chart-container-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    width: 70%; transform: translateZ(50px);
 }

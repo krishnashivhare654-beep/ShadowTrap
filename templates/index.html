@@ -2,51 +2,106 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ShadowTrap | Intelligence Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>ShadowTrap | Final Sentinel</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        :root { --neon: #00f2fe; --purple: #7000ff; --pink: #ff0055; --bg: #010103; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: sans-serif; overflow-x: hidden; }
+        
+        /* 3D Wrapper */
+        .wrapper { perspective: 1000px; height: 350vh; background: var(--bg); }
+        .panel { 
+            height: 100vh; width: 100%; position: sticky; top: 0; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            transform-style: preserve-3d; background: transparent;
+        }
+        
+        .hero-title { font-size: 5rem; background: linear-gradient(to right, var(--neon), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; }
+        
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 80%; }
+        .box { background: rgba(255,255,255,0.05); border: 1px solid var(--neon); padding: 20px; border-radius: 8px; }
+        
+        table { width: 90%; border-collapse: collapse; margin-top: 20px; background: rgba(0,0,0,0.5); }
+        th, td { padding: 12px; border: 1px solid #222; text-align: left; font-size: 0.9rem; }
+        th { color: var(--neon); }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; z-index: 100; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
+        .modal-box { width: 600px; background: #000; border: 1px solid var(--neon); padding: 20px; }
+        .terminal { background: #050505; color: #39ff14; padding: 15px; min-height: 200px; font-family: monospace; }
+        
+        button { background: var(--neon); border: none; padding: 5px 10px; cursor: pointer; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <div id="cursor-glow"></div>
-
-    <div class="perspective-wrapper">
-        <section class="panel home-panel">
-            <h1 class="glitch-title">SHADOWTRAP</h1>
-            <p style="color:var(--neon)">CYBER INTELLIGENCE PLATFORM</p>
+    <div class="wrapper">
+        <section class="panel home-sec">
+            <h1 class="hero-title">SHADOWTRAP</h1>
+            <p>SCROLL TO ANALYZE INTRUSIONS</p>
         </section>
 
-        <section class="panel chart-panel">
-            <h2 style="color:var(--neon); margin-bottom:30px; font-family:Orbitron;">📊 THREAT LANDSCAPE</h2>
-            <div class="chart-container-grid">
-                <div class="chart-box"><canvas id="threatChart"></canvas></div>
-                <div class="chart-box"><canvas id="userChart"></canvas></div>
+        <section class="panel chart-sec">
+            <div class="chart-grid">
+                <div class="box"><canvas id="threatChart"></canvas></div>
+                <div class="box"><canvas id="userChart"></canvas></div>
             </div>
         </section>
 
-        <section class="panel monitor-panel">
-            <div class="logs-window">
-                <h2 style="color:var(--neon); margin-bottom:20px; font-family:Orbitron;">🚨 THREAT MONITOR</h2>
-                <div style="max-height:50vh; overflow-y:auto;">
-                    <table>
-                        <thead><tr><th>TIME</th><th>IP</th><th>LOCATION</th><th>USER:PASS</th><th>LEVEL</th><th>FORENSICS</th></tr></thead>
-                        <tbody id="logsBody"></tbody>
-                    </table>
-                </div>
-            </div>
+        <section class="panel monitor-sec">
+            <h2 style="color:var(--neon)">🚨 THREAT FEED</h2>
+            <table>
+                <thead><tr><th>TIME</th><th>IP</th><th>LOC</th><th>CREDENTIALS</th><th>LEVEL</th><th>ACTION</th></tr></thead>
+                <tbody id="logsBody"></tbody>
+            </table>
         </section>
     </div>
 
     <div id="replayModal" class="modal">
-        <div class="modal-content">
-            <span onclick="closeReplay()" style="float:right; cursor:pointer; color:var(--pink);">[ CLOSE ]</span>
-            <h3 style="color:var(--neon); margin-bottom:15px;">> FORENSIC_REPLAY</h3>
-            <div class="fake-terminal"><span id="replayText"></span><span class="cursor"></span></div>
+        <div class="modal-box">
+            <span onclick="closeReplay()" style="float:right; cursor:pointer; color:red;">[X]</span>
+            <h3 style="color:var(--neon)">FORENSIC REPLAY</h3>
+            <div class="terminal" id="replayText"></div>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // 3D Motion
+        gsap.to(".home-sec", { scrollTrigger: { trigger: ".home-sec", start: "top top", scrub: 1 }, z: -1000, opacity: 0 });
+        gsap.from(".chart-sec", { scrollTrigger: { trigger: ".home-sec", start: "30% top", scrub: 1 }, z: 1000, opacity: 0 });
+        gsap.from(".monitor-sec", { scrollTrigger: { trigger: ".home-sec", start: "70% top", scrub: 1 }, z: 1000, opacity: 0 });
+
+        let tChart, uChart;
+        function initCharts() {
+            tChart = new Chart(document.getElementById('threatChart'), { type: 'doughnut', data: { labels: ['Low', 'Med', 'CRIT'], datasets: [{ data: [0,0,0], backgroundColor: ['#39ff14','#ffae00','#ff3131'] }] }, options: { plugins: { legend: { labels: { color: '#fff' } } } } });
+            uChart = new Chart(document.getElementById('userChart'), { type: 'bar', data: { labels: [], datasets: [{ label: 'Targets', data: [], backgroundColor: '#00f2fe' }] }, options: { scales: { y: { ticks: { color: '#fff' } }, x: { ticks: { color: '#fff' } } } } });
+        }
+
+        function update() {
+            fetch('/api/stats').then(r => r.json()).then(data => {
+                let html = "";
+                data.recent_attacks.forEach(a => {
+                    html += `<tr><td>${a.timestamp}</td><td>${a.ip}</td><td>${a.location}</td><td>${a.username}</td><td>${a.threat_level}</td><td><button onclick="startReplay('${a.command}')">REPLAY</button></td></tr>`;
+                });
+                document.getElementById('logsBody').innerHTML = html;
+                tChart.data.datasets[0].data = [data.threat_dist.Low||0, data.threat_dist.Medium||0, data.threat_dist.CRITICAL||0];
+                tChart.update();
+                uChart.data.labels = data.top_users.labels;
+                uChart.data.datasets[0].data = data.top_users.values;
+                uChart.update();
+            });
+        }
+
+        function startReplay(cmd) {
+            document.getElementById('replayModal').style.display='flex';
+            document.getElementById('replayText').innerText = "root@ubuntu:~# " + cmd;
+        }
+        function closeReplay() { document.getElementById('replayModal').style.display='none'; }
+
+        initCharts(); update(); setInterval(update, 4000);
+    </script>
 </body>
 </html>
