@@ -2,48 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ShadowTrap | Professional Cyber Suite</title>
+    <title>ShadowTrap // Sentinel HUD</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root { --neon: #00f2fe; --purple: #7000ff; --bg: #050505; --card: #0a0a0c; --crit: #ff3131; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); color: white; font-family: 'Share Tech Mono', monospace; scroll-behavior: smooth; }
-        
-        /* Navigation */
-        nav { background: rgba(0,0,0,0.95); padding: 15px 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1a1a1a; position: sticky; top: 0; z-index: 1000; }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
+        body { background: var(--bg); color: white; font-family: 'Share Tech Mono', monospace; overflow-x: hidden; }
+
+        /* Navbar */
+        nav { 
+            background: rgba(0,0,0,0.95); padding: 15px 50px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 1px solid #1a1a1a; position: sticky; top: 0; z-index: 1000;
+        }
         .logo { font-family: 'Orbitron'; font-size: 1.4rem; color: var(--neon); text-shadow: 0 0 10px var(--neon); }
-        .nav-links a { color: #888; text-decoration: none; margin-left: 25px; font-size: 0.85rem; transition: 0.3s; }
-        .nav-links a:hover { color: var(--neon); text-shadow: 0 0 8px var(--neon); }
+        .nav-links button { 
+            background: none; border: none; color: #888; margin-left: 25px; 
+            font-family: 'Share Tech Mono'; font-size: 0.9rem; cursor: pointer; transition: 0.3s;
+        }
+        .nav-links button:hover, .nav-links button.active { color: var(--neon); text-shadow: 0 0 8px var(--neon); }
 
-        .container { max-width: 1250px; margin: 40px auto; padding: 0 20px; }
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
 
-        /* Zoom Effect on Hover */
-        .hover-card { transition: transform 0.4s ease, border-color 0.4s; background: var(--card); border: 1px solid #1a1a1a; padding: 25px; border-radius: 4px; margin-bottom: 30px; }
-        .hover-card:hover { transform: scale(1.02); border-color: var(--neon); box-shadow: 0 0 30px rgba(0, 242, 254, 0.05); }
+        /* Content Sections */
+        .content-section { display: none; animation: fadeIn 0.5s ease; }
+        .content-section.active { display: block; }
 
-        h2 { font-family: 'Orbitron'; color: var(--neon); font-size: 1.1rem; margin-bottom: 20px; text-transform: uppercase; border-left: 4px solid var(--neon); padding-left: 15px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Dashboard Grid */
-        .grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 25px; }
-        .table-wrap { max-height: 500px; overflow-y: auto; }
+        .hover-card { 
+            background: var(--card); border: 1px solid #1a1a1a; padding: 25px; 
+            border-radius: 4px; transition: 0.4s; margin-bottom: 20px; 
+        }
+        .hover-card:hover { border-color: var(--neon); box-shadow: 0 0 20px rgba(0,242,254,0.05); }
+
+        h2 { font-family: 'Orbitron'; color: var(--neon); font-size: 1rem; margin-bottom: 20px; border-left: 3px solid var(--neon); padding-left: 15px; }
+
+        /* Monitor Table */
+        .table-wrap { max-height: 600px; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; }
         th { background: #000; padding: 15px; text-align: left; font-size: 0.75rem; color: #555; position: sticky; top: 0; }
-        td { padding: 12px 15px; border-bottom: 1px solid #111; font-size: 0.85rem; }
+        td { padding: 15px; border-bottom: 1px solid #111; font-size: 0.9rem; color: #ccc; }
 
-        /* Replay Button */
-        .replay-btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 5px 12px; cursor: pointer; transition: 0.3s; font-family: 'Orbitron'; font-size: 0.7rem; }
-        .replay-btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
+        /* Analytics Grid */
+        .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
-        /* Info Sections */
-        .info-section { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 30px; }
-        .info-card p { font-size: 0.95rem; color: #aaa; margin-bottom: 15px; line-height: 1.8; }
-        .code-box { background: #000; padding: 15px; border: 1px dashed #333; color: var(--neon); font-size: 0.9rem; margin: 10px 0; }
+        .badge { padding: 2px 6px; border-radius: 2px; font-weight: bold; font-size: 0.7rem; }
+        .badge-crit { border: 1px solid var(--crit); color: var(--crit); box-shadow: 0 0 5px var(--crit); }
+        .badge-med { border: 1px solid #ffae00; color: #ffae00; }
+
+        .replay-btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 5px 12px; cursor: pointer; font-family: 'Orbitron'; font-size: 0.7rem; transition: 0.3s; }
+        .replay-btn:hover { background: var(--neon); color: #000; }
 
         /* Modal */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.97); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-box { width: 90%; max-width: 700px; background: #000; border: 1px solid var(--neon); padding: 30px; position: relative; }
-        .terminal { background: #020202; color: #39ff14; padding: 20px; min-height: 250px; font-family: 'Share Tech Mono'; white-space: pre-wrap; line-height: 1.6; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-box { width: 90%; max-width: 700px; background: #000; border: 1px solid var(--neon); padding: 30px; }
+        .terminal { background: #020202; color: #39ff14; padding: 20px; min-height: 250px; font-family: monospace; border: 1px solid #111; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -51,26 +66,30 @@
     <nav>
         <div class="logo">SHADOWTRAP // 3.2</div>
         <div class="nav-links">
-            <a href="#monitor">MONITOR</a>
-            <a href="#analytics">ANALYTICS</a>
-            <a href="#about">ABOUT</a>
-            <a href="#help">HELP</a>
+            <button onclick="switchTab('monitor')" id="btn-monitor" class="active">MONITOR</button>
+            <button onclick="switchTab('analytics')" id="btn-analytics">ANALYTICS</button>
+            <button onclick="switchTab('about')" id="btn-about">ABOUT</button>
+            <button onclick="switchTab('help')" id="btn-help">HELP</button>
         </div>
     </nav>
 
     <div class="container">
-        <div class="grid">
-            <div class="hover-card" id="monitor">
-                <h2>🚨 LIVE THREAT MONITOR</h2>
+        <section id="tab-monitor" class="content-section active">
+            <div class="hover-card">
+                <h2>🚨 LIVE INTRUSION FEED</h2>
                 <div class="table-wrap">
                     <table>
-                        <thead><tr><th>TIME</th><th>SOURCE_IP</th><th>CREDENTIALS</th><th>THREAT</th><th>ACTION</th></tr></thead>
+                        <thead>
+                            <tr><th>TIME</th><th>SOURCE_IP</th><th>CREDENTIALS</th><th>THREAT</th><th>ACTION</th></tr>
+                        </thead>
                         <tbody id="logsBody"></tbody>
                     </table>
                 </div>
             </div>
+        </section>
 
-            <div id="analytics">
+        <section id="tab-analytics" class="content-section">
+            <div class="analytics-grid">
                 <div class="hover-card">
                     <h2>📊 RISK DISTRIBUTION</h2>
                     <canvas id="threatChart"></canvas>
@@ -80,26 +99,28 @@
                     <canvas id="userChart"></canvas>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div class="info-section">
-            <div class="hover-card info-card" id="about">
-                <h2>📖 ABOUT PROJECT</h2>
-                <p>ShadowTrap is a high-interaction SSH Honeypot developed to monitor and analyze unauthorized access attempts. Unlike simple firewalls, ShadowTrap lures attackers into a controlled environment where their every move is logged for forensic study.</p>
-                <p>Built with Python, Flask, and Paramiko, it provides real-time threat intelligence and visualizes attack patterns to improve defensive strategies.</p>
+        <section id="tab-about" class="content-section">
+            <div class="hover-card">
+                <h2>📖 PROJECT OVERVIEW</h2>
+                <p style="color:#888; line-height:1.6;">ShadowTrap is a high-interaction SSH Honeypot. It creates a deceptive environment to lure attackers, logging every command and credential used for forensic study. Built with Python and Flask, it provides real-time threat intelligence through this automated dashboard.</p>
             </div>
-            <div class="hover-card info-card" id="help">
-                <h2>❓ HOW TO USE</h2>
-                <p>To test the forensic engine, initiate an attack from a remote terminal (like Termux):</p>
-                <div class="code-box">ssh root@10.16.71.2 -p 2222</div>
-                <p>Use any password to enter. Once inside, try commands like <b>'ls'</b>, <b>'whoami'</b>, or <b>'rm'</b>. Your session will be recorded and displayed in the monitor feed above.</p>
+        </section>
+
+        <section id="tab-help" class="content-section">
+            <div class="hover-card">
+                <h2>❓ HOW TO TEST</h2>
+                <p style="color:#888; margin-bottom:15px;">Run this command from any terminal to trigger a log:</p>
+                <div style="background:#000; padding:15px; border:1px dashed #333; color:var(--neon);">ssh root@10.16.71.2 -p 2222</div>
+                <p style="color:#888; margin-top:15px;">Once connected, try running commands like 'whoami' or 'ls'.</p>
             </div>
-        </div>
+        </section>
     </div>
 
     <div id="replayModal" class="modal">
         <div class="modal-box">
-            <span onclick="closeReplay()" style="float:right; cursor:pointer; color:var(--crit); font-family:Orbitron;">[ CLOSE ]</span>
+            <span onclick="closeReplay()" style="float:right; cursor:pointer; color:var(--crit);">[ CLOSE ]</span>
             <h2 style="border:none;">> FORENSIC_PLAYBACK</h2>
             <div class="terminal" id="replayText"></div>
         </div>

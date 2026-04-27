@@ -47,8 +47,8 @@ function update() {
 function startReplay(cmd, user, loc) {
     document.getElementById('replayModal').style.display = 'flex';
     const text = document.getElementById('replayText');
-    const displayCmd = cmd === "LOGIN_ATTEMPT" ? "exit (Auth Failure)" : cmd;
-    text.innerHTML = `[SESSION_FORENSICS]\n------------------\nUSER: ${user}\nORIGIN: ${loc}\n\nroot@ubuntu:~# ${displayCmd}\n\n[END OF LOG]`;
+    const displayCmd = cmd === "LOGIN_ATTEMPT" ? "exit (Authentication Failed)" : cmd;
+    text.innerHTML = `[SESSION_FORENSICS]\n------------------\nUSER: ${user}\nSOURCE: ${loc}\n\nroot@ubuntu:~# ${displayCmd}\n\n[END_OF_LOG]`;
 }
 
 function closeReplay() { document.getElementById('replayModal').style.display = 'none'; }
