@@ -1,6 +1,6 @@
 gsap.registerPlugin(ScrollTrigger);
 
-// Stage Transitions
+// Timeline for 3D Stage Transitions
 let tl = gsap.timeline({
     scrollTrigger: {
         trigger: ".wrapper",
@@ -10,12 +10,21 @@ let tl = gsap.timeline({
     }
 });
 
-tl.to(".home-sec", { z: -500, opacity: 0, autoAlpha: 0, duration: 1 })
-  .fromTo(".chart-sec", { z: 500, opacity: 0, autoAlpha: 0 }, { z: 0, opacity: 1, autoAlpha: 1, duration: 1 })
-  .to(".chart-sec", { z: -500, opacity: 0, autoAlpha: 0, duration: 1 })
-  .fromTo(".monitor-sec", { z: 500, opacity: 0, autoAlpha: 0 }, { z: 0, opacity: 1, autoAlpha: 1, duration: 1 });
+// Stage 1: Home Section goes into the screen (Depth)
+tl.to(".home-sec", { z: -800, opacity: 0, pointerEvents: "none", duration: 1 })
 
-// Charts & Update Logic
+// Stage 2: Charts come from the front and stay
+  .fromTo(".chart-sec", 
+    { z: 800, opacity: 0, pointerEvents: "none" }, 
+    { z: 0, opacity: 1, pointerEvents: "all", duration: 1 })
+  .to(".chart-sec", { z: -800, opacity: 0, pointerEvents: "none", duration: 1 })
+
+// Stage 3: Monitor Table comes from front and stays
+  .fromTo(".monitor-sec", 
+    { z: 800, opacity: 0, pointerEvents: "none" }, 
+    { z: 0, opacity: 1, pointerEvents: "all", duration: 1 });
+
+// --- REST OF THE LOGIC (Charts & Data) ---
 let tChart, uChart;
 function initCharts() {
     tChart = new Chart(document.getElementById('threatChart'), {

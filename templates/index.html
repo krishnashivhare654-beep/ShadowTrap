@@ -2,51 +2,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ShadowTrap v3.2 | Stable</title>
+    <title>ShadowTrap v3.2 | 3D Final</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <style>
         :root { --neon: #00f2fe; --purple: #7000ff; --bg: #010103; --crit: #ff3131; }
-        body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: 'Share Tech Mono', monospace; overflow: hidden; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: 'Share Tech Mono', monospace; overflow-x: hidden; }
         
-        .wrapper { perspective: 1000px; height: 300vh; background: var(--bg); }
+        .wrapper { perspective: 1200px; height: 400vh; background: var(--bg); }
         
         .panel { 
             height: 100vh; width: 100%; position: fixed; top: 0; 
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            transform-style: preserve-3d; opacity: 0; visibility: hidden;
+            transform-style: preserve-3d; opacity: 0; pointer-events: none;
         }
 
-        .hero-title { font-size: 5rem; font-family: 'Orbitron'; background: linear-gradient(to right, var(--neon), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-title { font-size: 5rem; font-family: 'Orbitron'; background: linear-gradient(to right, var(--neon), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; }
         
         .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; width: 80%; }
         .box { background: rgba(255,255,255,0.03); border: 1px solid var(--purple); padding: 20px; border-radius: 4px; }
 
-        .table-container { width: 90%; max-height: 70vh; overflow-y: auto; background: rgba(0,0,0,0.8); border: 1px solid var(--neon); padding: 10px; }
+        .monitor-sec { justify-content: flex-start !important; padding-top: 50px; }
+        .table-container { width: 95%; max-height: 75vh; overflow-y: auto; background: rgba(0,0,0,0.8); border: 1px solid var(--neon); padding: 10px; }
+        
         table { width: 100%; border-collapse: collapse; }
         th { color: var(--neon); padding: 15px; border-bottom: 2px solid #222; text-align: left; position: sticky; top: 0; background: #000; }
-        td { padding: 15px; border-bottom: 1px solid #111; font-size: 0.9rem; }
+        td { padding: 12px; border-bottom: 1px solid #111; font-size: 0.85rem; }
         
-        .badge-critical { color: var(--crit); border: 1px solid var(--crit); padding: 2px 5px; font-weight: bold; }
-        .badge-medium { color: #ffae00; border: 1px solid #ffae00; padding: 2px 5px; font-weight: bold; }
+        .badge-critical { color: var(--crit); border: 1px solid var(--crit); padding: 2px 5px; font-weight: bold; font-size: 0.7rem; }
+        .badge-medium { color: #ffae00; border: 1px solid #ffae00; padding: 2px 5px; font-weight: bold; font-size: 0.7rem; }
+        
+        button { background: var(--neon); border: none; padding: 5px 12px; cursor: pointer; font-family: 'Orbitron'; font-weight: bold; }
 
-        button { background: var(--neon); border: none; padding: 6px 15px; cursor: pointer; font-family: 'Orbitron'; font-weight: bold; }
-
-        .modal { display: none; position: fixed; z-index: 999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); justify-content: center; align-items: center; }
-        .modal-box { width: 600px; background: #000; border: 1px solid var(--neon); padding: 20px; }
-        .terminal { background: #050505; color: #39ff14; padding: 15px; min-height: 200px; font-family: monospace; }
+        .modal { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); justify-content: center; align-items: center; }
+        .modal-box { width: 600px; background: #000; border: 1px solid var(--neon); padding: 25px; }
     </style>
 </head>
 <body>
     <div class="wrapper">
-        <section class="panel home-sec" style="opacity: 1; visibility: visible;">
+        <section class="panel home-sec" style="opacity:1; pointer-events:all;">
             <h1 class="hero-title">SHADOWTRAP</h1>
-            <p style="letter-spacing: 5px; color: var(--neon);">FORENSIC ENGINE ACTIVE</p>
+            <p style="letter-spacing: 5px; color: var(--neon);">INTELLIGENCE SENTINEL</p>
         </section>
 
         <section class="panel chart-sec">
-            <h2 style="font-family: Orbitron; color: var(--neon);">📊 THREAT LANDSCAPE</h2>
+            <h2 style="font-family: Orbitron; color: var(--neon); margin-bottom:20px;">📊 THREAT LANDSCAPE</h2>
             <div class="chart-grid">
                 <div class="box"><canvas id="threatChart"></canvas></div>
                 <div class="box"><canvas id="userChart"></canvas></div>
@@ -54,7 +55,7 @@
         </section>
 
         <section class="panel monitor-sec">
-            <h2 style="font-family: Orbitron; color: var(--neon);">🚨 LIVE FEED</h2>
+            <h2 style="font-family: Orbitron; color: var(--neon); margin-bottom:20px;">🚨 LIVE INTEL FEED</h2>
             <div class="table-container">
                 <table>
                     <thead><tr><th>TIME</th><th>IP</th><th>LOC</th><th>CREDENTIALS</th><th>LEVEL</th><th>ACTION</th></tr></thead>
@@ -66,9 +67,9 @@
 
     <div id="replayModal" class="modal">
         <div class="modal-box">
-            <span onclick="closeReplay()" style="float:right; cursor:pointer; color:red;">[ CLOSE ]</span>
-            <h3 style="color:var(--neon)">REPLAY_MODE</h3>
-            <div class="terminal" id="replayText"></div>
+            <span onclick="closeReplay()" style="float:right; cursor:pointer; color:red; font-family: Orbitron;">[ CLOSE ]</span>
+            <h3 style="color:var(--neon)">> REPLAY_SYSTEM</h3>
+            <div id="replayText" style="background:#050505; color:#39ff14; padding:20px; margin-top:15px; font-family:monospace; min-height:200px; white-space:pre-wrap;"></div>
         </div>
     </div>
 
