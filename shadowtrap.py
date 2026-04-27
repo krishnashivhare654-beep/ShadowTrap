@@ -1,129 +1,88 @@
-import socket
-import threading
 import paramiko
 import sqlite3
-import os
+import datetime
 import requests
-from datetime import datetime
-from colorama import Fore, init
-
-init(autoreset=True)
+import threading
+import socket
 
 # --- CONFIGURATION ---
-HOST_KEY = paramiko.RSAKey.generate(2048)
-LISTEN_PORT = 2222
+PORT = 2222
 DB_PATH = "logs/attacks.db"
-os.makedirs("logs", exist_ok=True)
 
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1497959884946280640/GNaDMfTtZRnsbbrVdP1ZGrRkgc7KImwFWarz7kFbxDeZM4iVHQ_XtPGB_0DMW3b2KyRM"
-
-db_lock = threading.Lock()
-
-def send_discord_alert(msg):
-    try:
-        data = {"content": msg, "username": "ShadowTrap v3.2"}
-        requests.post(DISCORD_WEBHOOK_URL, json=data, timeout=5)
-    except: pass
-
-def calculate_threat_score(username, password, command=""):
-    score = 15
-    level = "Low"
-    if password in ["admin", "12345", "root"] or username == "root":
-        score += 25
-        level = "Medium"
-    dangerous_cmds = ["rm", "wget", "curl", "chmod", "sh", "sudo", "nc"]
-    if any(cmd in command.lower() for cmd in dangerous_cmds):
-        score += 70
-        level = "CRITICAL"
-    return min(score, 100), level
-
-def get_geo_info(ip):
-    try:
-        target = ip
-        if ip in ["127.0.0.1", "localhost"]:
-            target = requests.get('https://api.ipify.org', timeout=3).text
-        res = requests.get(f"http://ip-api.com/json/{target}?fields=status,country,city").json()
-        if res.get('status') == 'success':
-            return f"{res.get('city')}, {res.get('country')}"
-    except: pass
-    return "Unknown Location"
-
+# Database Setup
 def init_db():
-    with db_lock:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS attacks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT, ip TEXT, location TEXT, 
-            username TEXT, password TEXT, command TEXT,
-            threat_score INTEGER, threat_level TEXT
-        )''')
-        conn.commit()
-        conn.close()
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS attacks 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, ip TEXT, 
+                  location TEXT, username TEXT, password TEXT, command TEXT, threat_level TEXT)''')
+    conn.commit()
+    conn.close()
 
-def log_attack(ip, username, password, command="LOGIN_ATTEMPT"):
-    location = get_geo_info(ip)
-    score, level = calculate_threat_score(username, password, command)
-    with db_lock:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("INSERT INTO attacks (timestamp, ip, location, username, password, command, threat_score, threat_level) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                  (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ip, location, username, password, command, score, level))
-        conn.commit()
-        conn.close()
-    if level in ["Medium", "CRITICAL"]:
-        alert_msg = f"**🚨 SHADOWTRAP ALERT**\n**Level:** `{level}`\n**IP:** `{ip}`\n**Cmd:** `{command}`"
-        send_discord_alert(alert_msg)
+def get_location(ip):
+    try:
+        if ip == "127.0.0.1" or ip.startswith("192.168") or ip.startswith("10."):
+            return "Local Network (Admin)"
+        response = requests.get(f"http://ip-api.com/json/{ip}", timeout=5).json()
+        if response.get('status') == 'success':
+            return f"{response['city']}, {response['country']}"
+        return "Unknown Location"
+    except:
+        return "Offline/Local"
 
-class ShadowServer(paramiko.ServerInterface):
+def log_to_db(ip, user, password, cmd, level):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    location = get_location(ip)
+    cursor.execute("INSERT INTO attacks (timestamp, ip, location, username, password, command, threat_level) VALUES (?,?,?,?,?,?,?)",
+                   (ts, ip, location, user, password, cmd, level))
+    conn.commit()
+    conn.close()
+
+class HoneyServer(paramiko.ServerInterface):
     def __init__(self, client_ip):
         self.client_ip = client_ip
-        self.event = threading.Event()
     def check_auth_password(self, username, password):
-        log_attack(self.client_ip, username, password)
-        return paramiko.AUTH_SUCCESSFUL 
-    def get_allowed_auths(self, username): return "password"
-    def check_channel_request(self, kind, chanid): return paramiko.OPEN_SUCCEEDED if kind == "session" else paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
-    def check_channel_shell_request(self, channel): self.event.set(); return True
-    def check_channel_pty_request(self, *args): return True
+        log_to_db(self.client_ip, username, password, "LOGIN_ATTEMPT", "Medium")
+        return paramiko.AUTH_SUCCESSFUL
+    def check_channel_request(self, kind, chanid):
+        return paramiko.OPEN_SUCCEEDED if kind == "session" else paramiko.OPEN_FAILED
 
 def handle_connection(client, addr):
     client_ip = addr[0]
     transport = paramiko.Transport(client)
-    transport.add_server_key(HOST_KEY)
-    server = ShadowServer(client_ip)
-    try:
-        transport.start_server(server=server)
-        channel = transport.accept(20)
-        if not channel: return
-        server.event.wait(5)
-        channel.send("\r\nWelcome to Ubuntu 20.04.4 LTS\r\nroot@ubuntu:~# ")
-        cmd_buf = ""
+    host_key = paramiko.RSAKey.generate(2048)
+    transport.add_server_key(host_key)
+    server = HoneyServer(client_ip)
+    transport.start_server(server=server)
+    chan = transport.accept(20)
+    if chan:
+        chan.send("Welcome to Ubuntu 20.04.4 LTS\r\n")
         while True:
-            char = channel.recv(1).decode("utf-8", errors="ignore")
-            if not char: break
-            if char == "\r":
-                channel.send("\r\n")
-                if cmd_buf.strip():
-                    log_attack(client_ip, "root", "SESSION", cmd_buf.strip())
-                    if cmd_buf.strip() == "ls": channel.send("bin  etc  home  root  var\r\n")
-                    else: channel.send(f"bash: {cmd_buf.strip()}: command not found\r\n")
-                channel.send("root@ubuntu:~# ")
-                cmd_buf = ""
-            elif char == "\x7f":
-                if cmd_buf: cmd_buf = cmd_buf[:-1]; channel.send("\b \b")
-            else:
-                cmd_buf += char; channel.send(char)
-    except: pass
-    finally: transport.close()
+            chan.send("root@ubuntu:~# ")
+            cmd = ""
+            while not cmd.endswith("\r"):
+                char = chan.recv(1).decode()
+                cmd += char
+                chan.send(char)
+            cmd = cmd.strip()
+            if cmd == "exit": break
+            level = "CRITICAL" if any(x in cmd for x in ["rm", "wget", "curl", "sudo"]) else "Low"
+            log_to_db(client_ip, "root", "N/A", cmd, level)
+            chan.send("\r\nCommand Not Found or Access Denied\r\n")
+    transport.close()
 
-def main():
-    init_db(); sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def start_engine():
+    init_db()
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind(("0.0.0.0", 2222)); sock.listen(100)
-    print(f"{Fore.CYAN}🕸️ ENGINE v3.2 ACTIVE")
+    sock.bind(('0.0.0.0', PORT))
+    sock.listen(100)
+    print(f"[*] ShadowTrap Engine Active on Port {PORT}")
     while True:
         client, addr = sock.accept()
-        threading.Thread(target=handle_connection, args=(client, addr), daemon=True).start()
+        threading.Thread(target=handle_connection, args=(client, addr)).start()
 
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    start_engine()
